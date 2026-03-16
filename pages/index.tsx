@@ -96,27 +96,25 @@ function buildSteps() {
     {id:"orient_date", type:"typed",section:"Orientation",prompt:"What is today's date — just the number?", placeholder:"e.g. 9"},
     {id:"orient_place",type:"typed",section:"Orientation",prompt:"What city or town are you in right now?", placeholder:"Type the city name…"},
 
-    // SERIAL 7s — randomised start and step
+    // SERIAL 7s & DIGIT SPAN BACKWARD — alternating between subtraction and reverse number tests
     {id:"s7_1",type:"typed",section:"Attention",prompt:`Start with ${serial.start} and take away ${serial.step}. What do you get?`, placeholder:"Your answer…",hint:`${serial.start} minus ${serial.step} = ?`},
-    {id:"s7_2",type:"typed",section:"Attention",prompt:`Now take away ${serial.step} from that number.`,                              placeholder:"Your answer…",hint:`Your last answer minus ${serial.step}`},
-    {id:"s7_3",type:"typed",section:"Attention",prompt:`Take away ${serial.step} again. What is the result?`,                         placeholder:"Your answer…",hint:`Your last answer minus ${serial.step}`},
-    {id:"s7_4",type:"typed",section:"Attention",prompt:`Once more — take away ${serial.step}.`,                                       placeholder:"Your answer…",hint:`Your last answer minus ${serial.step}`},
-    {id:"s7_5",type:"typed",section:"Attention",prompt:`Last one — take away ${serial.step} one final time.`,                         placeholder:"Your answer…",hint:`Your last answer minus ${serial.step}`},
-
-    // DIGIT SPAN BACKWARD — now 4 levels including 5-digit
     {id:"dsb_2",type:"digit_span",section:"Attention",
       prompt:"I will show you some numbers. Type them in REVERSE order — backwards.",
       subtext:"Example: if you see  3 – 1  →  you type  1 3",
       digits:digits.d2.shown, answer:digits.d2.answer, hint:digits.d2.hint},
+    {id:"s7_2",type:"typed",section:"Attention",prompt:`Now take away ${serial.step} from that number.`,                              placeholder:"Your answer…",hint:`Your last answer minus ${serial.step}`},
     {id:"dsb_3",type:"digit_span",section:"Attention",
       prompt:"Good! Now try 3 numbers in reverse order.",
       digits:digits.d3.shown, answer:digits.d3.answer, hint:digits.d3.hint},
+    {id:"s7_3",type:"typed",section:"Attention",prompt:`Take away ${serial.step} again. What is the result?`,                         placeholder:"Your answer…",hint:`Your last answer minus ${serial.step}`},
     {id:"dsb_4",type:"digit_span",section:"Attention",
       prompt:"Excellent! Now 4 numbers in reverse order.",
       digits:digits.d4.shown, answer:digits.d4.answer, hint:digits.d4.hint},
+    {id:"s7_4",type:"typed",section:"Attention",prompt:`Once more — take away ${serial.step}.`,                                       placeholder:"Your answer…",hint:`Your last answer minus ${serial.step}`},
     {id:"dsb_5",type:"digit_span",section:"Attention",
       prompt:"Last one — 5 numbers in reverse order. Take your time.",
       digits:digits.d5.shown, answer:digits.d5.answer, hint:digits.d5.hint},
+    {id:"s7_5",type:"typed",section:"Attention",prompt:`Last one — take away ${serial.step} one final time.`,                         placeholder:"Your answer…",hint:`Your last answer minus ${serial.step}`},
 
     // NAMING — 6 objects: easy → medium → hard
     {id:"name_pencil",    type:"image_name",section:"Language",prompt:"What is this object called?",emoji:"✏️",hint:"You hold it and use it to write on paper"},
