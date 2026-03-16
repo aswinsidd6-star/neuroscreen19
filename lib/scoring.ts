@@ -232,6 +232,151 @@ export function computeScore(ans: Record<string,string>) {
   }
 }
 
+// ═══ DETAILED COMPONENT EVALUATION — per-test breakdown ═════════════════════
+export function evaluateTestComponents(ans: Record<string,string>) {
+  const now = getNow()
+  
+  const components: Record<string, any> = {}
+
+  // ORIENTATION — 5 components
+  components.orientation = {
+    year: (ans.orient_year?.trim().toLowerCase() === now.year ? 1 : 0),
+    month: (ans.orient_month?.trim().toLowerCase() === now.month ? 1 : 0),
+    day: (ans.orient_day?.trim().toLowerCase() === now.day ? 1 : 0),
+    date: (ans.orient_date?.trim() === now.date ? 1 : 0),
+    place: ((ans.orient_place||"").trim().length > 1 ? 1 : 0),
+  }
+
+  // SERIAL 7s — 5 components (accuracy per subtraction)
+  const serialCorrect: number[] = ans._serial_answers
+    ? JSON.parse(ans._serial_answers) : [93,86,79,72,65]
+  components.serial7s = {
+    subtraction_1: (parseInt(ans.s7_1) === serialCorrect[0] ? 1 : 0),
+    subtraction_2: (parseInt(ans.s7_2) === serialCorrect[1] ? 1 : 0),
+    subtraction_3: (parseInt(ans.s7_3) === serialCorrect[2] ? 1 : 0),
+    subtraction_4: (parseInt(ans.s7_4) === serialCorrect[3] ? 1 : 0),
+    subtraction_5: (parseInt(ans.s7_5) === serialCorrect[4] ? 1 : 0),
+  }
+
+  // DIGIT SPAN BACKWARD — 4 components (one per difficulty level)
+  const digitCorrect = ans._digit_answers
+    ? JSON.parse(ans._digit_answers) : { d2:"42", d3:"375", d4:"8421", d5:"72491" }
+  components.digitSpanBackward = {
+    two_digits: ((ans.dsb_2||"").replace(/[\s\-,.]/g,"") === digitCorrect.d2 ? 1 : 0),
+    three_digits: ((ans.dsb_3||"").replace(/[\s\-,.]/g,"") === digitCorrect.d3 ? 1 : 0),
+    four_digits: ((ans.dsb_4||"").replace(/[\s\-,.]/g,"") === digitCorrect.d4 ? 1 : 0),
+    five_digits: ((ans.dsb_5||"").replace(/[\s\-,.]/g,"") === digitCorrect.d5 ? 1 : 0),
+  }
+
+  // NAMING — 6 components (one object per component)
+  components.naming = {
+    pencil: ((ans.name_pencil||"").toLowerCase().includes("pencil") ? 1 : 0),
+    watch: (!!((ans.name_watch||"").toLowerCase().match(/watch|clock/)) ? 1 : 0),
+    key: (!!((ans.name_key||"").toLowerCase().match(/key|keys/)) ? 1 : 0),
+    scissors: (!!((ans.name_scissors||"").toLowerCase().match(/scissor|scissors|shears/)) ? 1 : 0),
+    thermometer: (!!((ans.name_thermometer||"").toLowerCase().match(/thermo|temperature|fever/)) ? 1 : 0),
+    compass: (!!((ans.name_compass||"").toLowerCase().match(/compass|direction|bearing/)) ? 1 : 0),
+  }
+
+  // LANGUAGE PRODUCTION — 2 components
+  components.languageProduction = {
+    command_following: (ans.command === "done" ? 1 : 0),
+    sentence_writing: ((ans.writing||"").trim().split(/\s+/).length >= 3 ? 1 : 0),
+  }
+
+  // MEMORY — IMMEDIATE RECALL (3 words)
+  const activeWords: string[] = ans._word_set
+    ? JSON.parse(ans._word_set) : MEMORY_WORDS
+  const recalled = (ans.memory_recall||"").toLowerCase()
+  components.immediateRecall = {
+    words_recalled: activeWords.filter(w=>recalled.includes(w.toLowerCase())).length,
+    max: 3,
+  }
+
+  // MEMORY — CUED RECALL (3 words)
+  const cueText = (ans.cued_recall||"").toLowerCase()
+  const cuedHit = activeWords.filter(w=>cueText.includes(w.toLowerCase()))
+  components.cuedRecall = {
+    words_recalled: cuedHit.length,
+    max: 3,
+  }
+
+  // STORY RECALL — 5 components (name + day + details + neighbor + intrusion)
+  components.storyRecall = {
+    protagonist_name: ((ans.sr_name||"").toLowerCase().includes("maria") ||
+                       (ans.sr_name||"").toLowerCase().includes("james") ||
+                       (ans.sr_name||"").toLowerCase().includes("priya") ? 1 : 0),
+    day_of_week: ((ans.sr_day||"").toLowerCase().includes("tuesday") ||
+                  (ans.sr_day||"").toLowerCase().includes("friday") ||
+                  (ans.sr_day||"").toLowerCase().includes("monday") ? 1 : 0),
+    what_forgot: (!!(ans.sr_forgot||"").toLowerCase().match(/list|shopping|card|library|document|insurance|paper/) ? 1 : 0),
+    person_met: ((ans.sr_neighbour||"").toLowerCase().includes("john") ||
+                 (ans.sr_neighbour||"").toLowerCase().includes("sarah") ||
+                 (ans.sr_neighbour||"").toLowerCase().includes("raju") ? 1 : 0),
+    no_intrusion: ((ans.intrusion_check||"") === "No, the story did not mention money" ? 1 : 0),
+  }
+
+  // PROSPECTIVE MEMORY
+  components.prospectiveMemory = {
+    remembered: (ans.prospective_memory === "remembered" ? 1 : 0),
+  }
+
+  // FLUENCY — 2 components
+  const animals = parseInt(ans.animal_fluency_count||"0")
+  const fwords = parseInt(ans.letter_fluency_count||"0")
+  components.fluency = {
+    animal_fluency_score: Math.min(animals, 25),
+    letter_fluency_score: Math.min(fwords, 20),
+  }
+
+  // PENTAGON DRAWING — 5 components
+  const pentagonScore = parseInt(ans.pentagon_score||"0")
+  components.pentagonDrawing = {
+    overlap: (pentagonScore >= 1 ? 1 : 0),
+    five_sided: (pentagonScore >= 2 ? 1 : 0),
+    tremor_control: (pentagonScore >= 3 ? 1 : 0),
+    rotation_acceptable: (pentagonScore >= 4 ? 1 : 0),
+    perfect_copy: (pentagonScore === 5 ? 1 : 0),
+  }
+
+  // CLOCK DRAWING — 5 components  
+  const clockScore = parseInt(ans.clock_score||"0")
+  components.clockDrawing = {
+    circle_drawn: (clockScore >= 1 ? 1 : 0),
+    numbers_present: (clockScore >= 2 ? 1 : 0),
+    numbers_correct_position: (clockScore >= 3 ? 1 : 0),
+    hands_present: (clockScore >= 4 ? 1 : 0),
+    time_correct: (clockScore === 5 ? 1 : 0),
+  }
+
+  // PICTURE DESCRIPTION (simple assessment)
+  components.pictureDescription = {
+    main_scene_recognized: ((ans.picture_describe||"").length > 20 ? 1 : 0),
+    details_mentioned: ((ans.picture_describe||"").length > 50 ? 1 : 0),
+    logical_description: ((ans.picture_describe||"").length > 80 ? 1 : 0),
+  }
+
+  // SPEECH RECORDING
+  const speechScore = parseInt(ans.speech_record||"0")
+  components.speechRecording = {
+    clarity: (speechScore >= 2 ? 1 : 0),
+    accuracy: (speechScore >= 3 ? 1 : 0),
+    completeness: (speechScore >= 4 ? 1 : 0),
+    naturalness: (speechScore === 5 ? 1 : 0),
+  }
+
+  // ADL (Activities of Daily Living) — 5 components
+  components.adl = {
+    medication_management: (ans.adl_medicine === "no" ? 1 : 0),
+    financial_management: (ans.adl_money === "no" ? 1 : 0),
+    cooking: (ans.adl_cooking === "no" ? 1 : 0),
+    navigation: (ans.adl_lostway === "no" ? 1 : 0),
+    technology_use: (ans.adl_phone === "no" ? 1 : 0),
+  }
+
+  return components
+}
+
 export const SECTION_STYLE: Record<string,{bg:string;border:string;text:string}> = {
   Memory:       {bg:"rgba(99,102,241,0.1)",  border:"rgba(99,102,241,0.25)",  text:"#a5b4fc"},
   Orientation:  {bg:"rgba(16,185,129,0.1)",  border:"rgba(16,185,129,0.25)",  text:"#6ee7b7"},

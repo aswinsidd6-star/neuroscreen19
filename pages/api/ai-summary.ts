@@ -1,8 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { evaluateTestComponents } from '../lib/scoring'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
   const { answers: a, results: r } = req.body
+  
+  // Get detailed component-level evaluations for each test
+  const components = evaluateTestComponents(a)
 
   const now = new Date()
   const correctYear  = String(now.getFullYear())
@@ -110,6 +114,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const sectionSummary = `
 Memory (hippocampus): ${ss.memory?.pts||0}/${ss.memory?.max||16} | Orientation: ${ss.orientation?.pts||0}/${ss.orientation?.max||5} | Attention/Working Memory: ${ss.attention?.pts||0}/${ss.attention?.max||9} | Language/Naming/Fluency: ${ss.language?.pts||0}/${ss.language?.max||18} | Visuospatial: ${ss.visuospatial?.pts||0}/${ss.visuospatial?.max||7} | Speech: ${ss.speech?.pts||0}/${ss.speech?.max||5}`
 
+  // ── DETAILED COMPONENT BREAKDOWN ──────────────────────────────────────────
+  const componentBreakdown = `
+DETAILED COMPONENT SCORES BY TEST:
+
+ORIENTATION (5 items): Year ${components.orientation.year}/1 | Month ${components.orientation.month}/1 | Day ${components.orientation.day}/1 | Date ${components.orientation.date}/1 | Place ${components.orientation.place}/1
+
+SERIAL 7s (5 sequential operations): Op1 ${components.serial7s.subtraction_1}/1 → Op2 ${components.serial7s.subtraction_2}/1 → Op3 ${components.serial7s.subtraction_3}/1 → Op4 ${components.serial7s.subtraction_4}/1 → Op5 ${components.serial7s.subtraction_5}/1
+
+DIGIT SPAN BACKWARD (4 levels): 2-digit ${components.digitSpanBackward.two_digits}/1 | 3-digit ${components.digitSpanBackward.three_digits}/1 | 4-digit ${components.digitSpanBackward.four_digits}/1 | 5-digit ${components.digitSpanBackward.five_digits}/1
+
+NAMING (6 objects): Pencil ${components.naming.pencil}/1 | Watch ${components.naming.watch}/1 | Key ${components.naming.key}/1 | Scissors ${components.naming.scissors}/1 | Thermometer ${components.naming.thermometer}/1 | Compass ${components.naming.compass}/1
+
+IMMEDIATE WORD RECALL: ${components.immediateRecall.words_recalled}/3 words
+
+CUED RECALL: ${components.cuedRecall.words_recalled}/3 words (cue-responsiveness: ${components.cuedRecall.words_recalled - components.immediateRecall.words_recalled > 1 ? 'POSITIVE — retrieval issue' : 'POOR — encoding issue'})
+
+STORY RECALL (5 elements): Name ${components.storyRecall.protagonist_name}/1 | Day ${components.storyRecall.day_of_week}/1 | What forgot ${components.storyRecall.what_forgot}/1 | Person met ${components.storyRecall.person_met}/1 | No intrusions ${components.storyRecall.no_intrusion}/1
+
+PROSPECTIVE MEMORY: ${components.prospectiveMemory.remembered}/1 (remembered initial instruction)
+
+FLUENCY SCORES: ${components.fluency.animal_fluency_score} animals | ${components.fluency.letter_fluency_score} letter words | Ratio: ${components.fluency.animal_fluency_score > components.fluency.letter_fluency_score ? 'Normal (category≥letter)' : 'Alzheimer\'s pattern (letter>category)'}
+
+COMMAND & WRITING: Command following ${components.languageProduction.command_following}/1 | Sentence writing ${components.languageProduction.sentence_writing}/1
+
+PENTAGON DRAWING (5 components): Overlap ${components.pentagonDrawing.overlap}/1 | 5-sided ${components.pentagonDrawing.five_sided}/1 | Tremor ${components.pentagonDrawing.tremor_control}/1 | Rotation ${components.pentagonDrawing.rotation_acceptable}/1 | Perfect ${components.pentagonDrawing.perfect_copy}/1 → Total ${Object.values(components.pentagonDrawing).reduce((a,b)=>a+b,0)}/5
+
+CLOCK DRAWING (5 components): Circle ${components.clockDrawing.circle_drawn}/1 | Numbers ${components.clockDrawing.numbers_present}/1 | Position ${components.clockDrawing.numbers_correct_position}/1 | Hands ${components.clockDrawing.hands_present}/1 | Time correct ${components.clockDrawing.time_correct}/1 → Total ${Object.values(components.clockDrawing).reduce((a,b)=>a+b,0)}/5
+
+PICTURE DESCRIPTION: Scene recognized ${components.pictureDescription.main_scene_recognized}/1 | Details present ${components.pictureDescription.details_mentioned}/1 | Logical delivery ${components.pictureDescription.logical_description}/1
+
+SPEECH RECORDING: Clarity ${components.speechRecording.clarity}/1 | Accuracy ${components.speechRecording.accuracy}/1 | Completeness ${components.speechRecording.completeness}/1 | Naturalness ${components.speechRecording.naturalness}/1
+
+ADL — FUNCTIONAL STATUS (5 domains): Medicine ${components.adl.medication_management===1?'✓':'✗'} | Money ${components.adl.financial_management===1?'✓':'✗'} | Cooking ${components.adl.cooking===1?'✓':'✗'} | Navigation ${components.adl.navigation===1?'✓':'✗'} | Tech ${components.adl.technology_use===1?'✓':'✗'} | Domains with difficulty: ${5-Object.values(components.adl).reduce((a,b)=>a+b,0)}/5`
+
   // ── PATTERN NOTE ──────────────────────────────────────────────────────────
   let patternNote = ""
   if(cuedHelped && a.depression==="Yes, quite often") {
@@ -144,6 +182,8 @@ COMPLETE CLINICAL DATA
 ══════════════════════════════════════════════
 
 OVERALL: MMSE equivalent ${r.mmse}/30 | Composite risk score: ${r.total} | Level: ${r.level}
+
+${componentBreakdown}
 
 SECTION-WISE PERFORMANCE:
 ${sectionSummary}

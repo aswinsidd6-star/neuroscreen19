@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import Head from "next/head"
 import { supabase } from "../lib/supabase"
-import { computeScore, SECTION_STYLE } from "../lib/scoring"
+import { computeScore, SECTION_STYLE, evaluateTestComponents } from "../lib/scoring"
 
 // ═══ QUESTION POOLS — randomly selected each session ══════════════════════
 const WORD_SETS = [
@@ -1297,6 +1297,66 @@ export default function Home() {
                 <div style={{fontFamily:"monospace",fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:"#6b7280",marginBottom:5}}>PATIENT</div>
                 <div style={{fontSize:17,color:"#f9fafb"}}>{answers.name||"—"}</div>
                 <div style={{fontSize:12,color:"#6b7280",marginTop:3}}>Age {answers.age} · {answers.gender}</div>
+              </div>
+
+              {/* DETAILED COMPONENT BREAKDOWN */}
+              <div style={{background:"rgba(134,239,172,0.04)",border:"1px solid rgba(74,222,128,0.25)",borderRadius:18,padding:"22px",marginBottom:16}}>
+                <div style={{fontFamily:"monospace",fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:"#86efac",marginBottom:14}}>📊 DETAILED COMPONENT SCORES</div>
+                {(() => {
+                  const components = evaluateTestComponents(answers)
+                  return (
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                      <div>
+                        <div style={{fontFamily:"monospace",fontSize:10,color:"#6ee7b7",marginBottom:8,fontWeight:600}}>ORIENTATION</div>
+                        {[["Year",components.orientation.year],["Month",components.orientation.month],["Day",components.orientation.day],["Date",components.orientation.date],["Place",components.orientation.place]].map(([label,score],i)=>(
+                          <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#9ca3af",marginBottom:4}}>
+                            <span>{label}</span><span style={{color:score===1?"#34d399":"#ef4444",fontWeight:700}}>{score}/1</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div>
+                        <div style={{fontFamily:"monospace",fontSize:10,color:"#6ee7b7",marginBottom:8,fontWeight:600}}>SERIAL 7s (5 ops)</div>
+                        {[["Op 1",components.serial7s.subtraction_1],["Op 2",components.serial7s.subtraction_2],["Op 3",components.serial7s.subtraction_3],["Op 4",components.serial7s.subtraction_4],["Op 5",components.serial7s.subtraction_5]].map(([label,score],i)=>(
+                          <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#9ca3af",marginBottom:4}}>
+                            <span>{label}</span><span style={{color:score===1?"#34d399":"#ef4444",fontWeight:700}}>{score}/1</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div>
+                        <div style={{fontFamily:"monospace",fontSize:10,color:"#6ee7b7",marginBottom:8,fontWeight:600}}>DIGIT SPAN (4 levels)</div>
+                        {[["2-digit",components.digitSpanBackward.two_digits],["3-digit",components.digitSpanBackward.three_digits],["4-digit",components.digitSpanBackward.four_digits],["5-digit",components.digitSpanBackward.five_digits]].map(([label,score],i)=>(
+                          <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#9ca3af",marginBottom:4}}>
+                            <span>{label}</span><span style={{color:score===1?"#34d399":"#ef4444",fontWeight:700}}>{score}/1</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div>
+                        <div style={{fontFamily:"monospace",fontSize:10,color:"#6ee7b7",marginBottom:8,fontWeight:600}}>NAMING (6 objects)</div>
+                        {[["Pencil",components.naming.pencil],["Watch",components.naming.watch],["Key",components.naming.key],["Scissors",components.naming.scissors],["Thermometer",components.naming.thermometer],["Compass",components.naming.compass]].map(([label,score],i)=>(
+                          <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#9ca3af",marginBottom:4}}>
+                            <span>{label}</span><span style={{color:score===1?"#34d399":"#ef4444",fontWeight:700}}>{score}/1</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div>
+                        <div style={{fontFamily:"monospace",fontSize:10,color:"#6ee7b7",marginBottom:8,fontWeight:600}}>DRAWING TESTS</div>
+                        {[["Clock: Circle",components.clockDrawing.circle_drawn],["Clock: Numbers",components.clockDrawing.numbers_present],["Clock: Correct time",components.clockDrawing.time_correct],["Pentagon: Overlap",components.pentagonDrawing.overlap],["Pentagon: 5-sided",components.pentagonDrawing.five_sided]].map(([label,score],i)=>(
+                          <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#9ca3af",marginBottom:4}}>
+                            <span>{label}</span><span style={{color:score===1?"#34d399":"#ef4444",fontWeight:700}}>{score}/1</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div>
+                        <div style={{fontFamily:"monospace",fontSize:10,color:"#6ee7b7",marginBottom:8,fontWeight:600}}>MEMORY & ADL</div>
+                        {[["Immediate recall",components.immediateRecall.words_recalled],["Cued recall",components.cuedRecall.words_recalled],["Story recall",Object.values(components.storyRecall).filter(x=>x===1).length],["ADL functions",Object.values(components.adl).filter(x=>x===1).length]].map(([label,score],i)=>(
+                          <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#9ca3af",marginBottom:4}}>
+                            <span>{label}</span><span style={{color:score>2?"#34d399":"#ef4444",fontWeight:700}}>{score}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
 
               <div style={{background:"rgba(99,102,241,0.05)",border:"1px solid rgba(99,102,241,0.2)",borderRadius:18,padding:"22px",marginBottom:16}}>
