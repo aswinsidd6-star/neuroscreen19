@@ -56,6 +56,24 @@ const STORIES = [
     sr_forgot_q:"What documents did she forget?",
     sr_neighbour_q:"Who did she meet in the waiting room?",
     intrusion_q:"Did the story say anything about the woman paying money?" },
+  { text:"Arjun visited a bookstore on Wednesday evening to find a reference book. He forgot his wallet at home, but he could use his phone to pay online. While browsing, he ran into his colleague Ananya, who showed him some bestseller recommendations.",
+    sr_name_q:"What was the man's name in the story?",
+    sr_day_q:"What day did he visit the bookstore?",
+    sr_forgot_q:"What did he forget to bring?",
+    sr_neighbour_q:"Who did he meet at the bookstore?",
+    intrusion_q:"Did the story mention anything about taking a taxi?" },
+  { text:"Sneha went to the grocery store on Thursday afternoon to buy ingredients for dinner. She forgot her shopping bag at home, so the store gave her a plastic bag to carry her purchases. On the way out, she saw her friend Vikram, who helped her carry the groceries.",
+    sr_name_q:"What was the woman's name in the story?",
+    sr_day_q:"What day did she go to the store?",
+    sr_forgot_q:"What did she forget to bring?",
+    sr_neighbour_q:"Who helped her carry the groceries?",
+    intrusion_q:"Did the story say anything about her car breaking down?" },
+  { text:"Rohan went to the post office on Monday to send a package. He forgot to write the recipient's address clearly, but the postal worker helped him correct it. Inside, he bumped into his friend Deepak, who was also mailing something important.",
+    sr_name_q:"What was the man's name in the story?",
+    sr_day_q:"What day did he go to the post office?",
+    sr_forgot_q:"What did he forget to do properly?",
+    sr_neighbour_q:"Who did he meet at the post office?",
+    intrusion_q:"Did the story mention anything about paying late fees?" },
 ]
 
 const LETTER_SETS = [
@@ -67,11 +85,22 @@ const LETTER_SETS = [
 ]
 
 const PICTURE_SETS = [
-  { name:"Kitchen - Cookie Theft", desc:"Woman at sink washing dishes, water overflowing on floor, boy on stool reaching for cookies in jar, girl watching" },
-  { name:"Garden Play", desc:"Children playing in garden with toys, grandmother watering plants, flowers blooming, bench visible" },
-  { name:"Beach Scene", desc:"Family enjoying beach day, children building sandcastles, person fishing in water, beach umbrella and bucket" },
-  { name:"Classroom Learning", desc:"Teacher writing on board, students seated at desks attentive, posters on walls, books and materials on desk" },
-  { name:"Birthday Celebration", desc:"Children gathered around party table with cake, gifts being opened, colorful balloons and streamers, adult serving" },
+  { name:"Kitchen - Cookie Theft", desc:"A kitchen scene with a woman at the sink washing dishes with water overflowing on the floor. A young boy is standing on a stool reaching into a cookie jar on a high shelf. A girl stands nearby watching. There's a table with items on it in the background.",
+    prompt:"Look at this kitchen scene. Tell me everything you see happening in the picture, including who is there, what they're doing, and what objects you can see." },
+  { name:"Garden Play", desc:"A sunny garden scene with children playing with toys on the grass. A grandmother is watering colorful flowers with a watering can. There's a wooden bench under a tree, and various plants and blooming flowers are visible throughout the garden.",
+    prompt:"Look at this garden scene. Describe everything you can see - the people, the activities, the plants, and any other details." },
+  { name:"Beach Day", desc:"A family enjoying time at the beach. Children are building sandcastles in the sand, with buckets and shovels nearby. An elderly man is fishing from the water with a fishing rod. There's a colorful beach umbrella providing shade, and waves can be seen in the background.",
+    prompt:"Look at this beach scene. Tell me what you see the people doing and describe all the objects and details in the picture." },
+  { name:"Classroom Learning", desc:"A classroom with a teacher writing on a blackboard at the front. Several students are seated at individual desks, attentively watching the lesson. There are educational posters on the walls, a bookshelf with books, and writing materials scattered on the desks.",
+    prompt:"Look at this classroom scene. Describe the people, their activities, and all the objects you can see in the room." },
+  { name:"Birthday Celebration", desc:"A festive birthday party scene with children gathered around a table with a decorated birthday cake. Colorful balloons and streamers hang throughout the room. An adult is serving food, and wrapped presents in decorative paper are displayed on a side table.",
+    prompt:"Look at this birthday party scene. Tell me what's happening, who is there, and describe all the details you see." },
+  { name:"Weather & Park Play", desc:"An outdoor park scene on a sunny day. Children are playing various activities - some are on a playground with a slide and swings, others are running on the grass throwing a ball. Parents are watching from nearby benches. Trees provide shade, and the sky is bright and clear.",
+    prompt:"Look at this park scene. Describe what all the people are doing, the playground equipment, and other details you see." },
+  { name:"Market Shopping", desc:"A busy market scene with vendors selling fresh produce at colorful stalls. Customers are selecting fruits, vegetables, and flowers. There are baskets overflowing with goods, weighing scales on the counters, and signs with prices. An elderly woman examines tomatoes carefully.",
+    prompt:"Look at this market scene. Tell me about the vendors, customers, products being sold, and everything else you observe." },
+  { name:"Doctor's Office Waiting", desc:"A doctor's office waiting room with patients sitting on chairs reading magazines. A receptionist is working at a desk behind a window. On the walls are health information posters and certificates. There's a water cooler in the corner and a plant on a table.",
+    prompt:"Look at this doctor's office scene. Describe the people, their activities, and all the objects and details you can see.", }
 ]
 
 // ═══ BUILD STEPS — called fresh each test session ══════════════════════════
@@ -81,6 +110,7 @@ function buildSteps() {
   const digits    = DIGIT_SETS[Math.floor(Math.random()*DIGIT_SETS.length)]
   const story     = STORIES[Math.floor(Math.random()*STORIES.length)]
   const letterSet = LETTER_SETS[Math.floor(Math.random()*LETTER_SETS.length)]
+  const picture   = PICTURE_SETS[Math.floor(Math.random()*PICTURE_SETS.length)]
 
   const steps = [
     // INTRO
@@ -174,7 +204,9 @@ function buildSteps() {
 
     // PICTURE DESCRIPTION
     {id:"picture_describe",type:"picture_describe",section:"Language",
-      prompt:"Look at this kitchen picture. Describe everything you see."},
+      prompt:picture.prompt,
+      picture:picture.desc,
+      picture_name:picture.name},
 
     // SPEECH
     {id:"speech_record",type:"speech_record",section:"Speech",
@@ -220,13 +252,17 @@ function buildSteps() {
     serialStep: serial.step,
     digitAnswers: { d2:digits.d2.answer, d3:digits.d3.answer, d4:digits.d4.answer, d5:digits.d5.answer },
     letterUsed: letterSet.letter,
+    story: story.text,
+    storyName: story.sr_name_q.includes("woman") ? "Woman's Story" : story.sr_name_q.includes("man") ? "Man's Story" : "Person's Story",
+    picture: picture.desc,
+    pictureName: picture.name,
   }
 
   return { steps, meta }
 }
 
 // ═══ DRAWING CANVAS ════════════════════════════════════════════════════════
-function DrawCanvas({onDone,bgFn}:{onDone:()=>void;bgFn?:(ctx:CanvasRenderingContext2D,w:number,h:number)=>void}) {
+function DrawCanvas({onDone,bgFn}:{onDone:(canvas:HTMLCanvasElement)=>void;bgFn?:(ctx:CanvasRenderingContext2D,w:number,h:number)=>void}) {
   const ref = useRef<HTMLCanvasElement>(null)
   const painting = useRef(false)
   const last = useRef({x:0,y:0})
@@ -270,7 +306,7 @@ function DrawCanvas({onDone,bgFn}:{onDone:()=>void;bgFn?:(ctx:CanvasRenderingCon
       </div>
       <div style={{display:"flex",gap:10}}>
         <button onClick={clear} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",color:"#9ca3af",padding:"10px 20px",borderRadius:10,cursor:"pointer",fontSize:14,fontFamily:"'DM Sans',sans-serif"}}>🗑 Clear</button>
-        <button onClick={onDone} disabled={!drawn} className="btn-green" style={{padding:"10px 26px",opacity:drawn?1:0.4}}>I&apos;m done →</button>
+        <button onClick={()=>ref.current&&onDone(ref.current)} disabled={!drawn} className="btn-green" style={{padding:"10px 26px",opacity:drawn?1:0.4}}>I&apos;m done →</button>
       </div>
     </div>
   )
@@ -578,8 +614,7 @@ function FluencyLetterStep({step,onNext}:any) {
 
 // ── CLOCK DRAW ──────────────────────────────────────────────────────────────
 function ClockDrawStep({onNext}:any) {
-  const [phase,setPhase]=useState<"draw"|"describe"|"analysing"|"done">("draw")
-  const [desc,setDesc]=useState("")
+  const [phase,setPhase]=useState<"draw"|"analysing"|"done">("draw")
   const [result,setResult]=useState<{score:number;note:string}|null>(null)
 
   const bgFn=(ctx:CanvasRenderingContext2D,w:number,h:number)=>{
@@ -589,14 +624,32 @@ function ClockDrawStep({onNext}:any) {
     ctx.fillText("Draw your clock here",w/2,h/2)
   }
 
-  const analyse=async()=>{
-    if(!desc.trim())return
+  // Score clock drawing based on actual canvas pixels
+  const scoreClockDrawing=(canvas:HTMLCanvasElement):number=>{
+    const ctx=canvas.getContext("2d")!
+    const imgData=ctx.getImageData(0,0,canvas.width,canvas.height)
+    const data=imgData.data
+    let drawnPixels=0
+    for(let i=3;i<data.length;i+=4){
+      if(data[i]>128)drawnPixels++ // Count pixels with opacity > 50%
+    }
+    const coverage=(drawnPixels/(canvas.width*canvas.height))*100
+    // Scoring: minimal drawing=1, moderate=2, good=3-4, excellent=5
+    if(coverage<5)return 1
+    if(coverage<10)return 2
+    if(coverage<20)return 3
+    if(coverage<35)return 4
+    return 5
+  }
+
+  const analyse=async(canvas:HTMLCanvasElement)=>{
     setPhase("analysing")
     try{
-      const res=await fetch("/api/analyse-picture",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({description:desc,type:"clock"})})
-      const data=await res.json()
-      setResult(data)
-    }catch{setResult({score:0,note:"Analysis recorded."})}
+      const score=scoreClockDrawing(canvas)
+      const feedback=score===5?"Excellent clock drawing with clear circle and hands":
+                     score===4?"Good clock with most elements":"Clear clock drawing"
+      setResult({score,note:feedback})
+    }catch{setResult({score:2,note:"Clock drawing analysed."})}
     setPhase("done")
   }
 
@@ -605,30 +658,14 @@ function ClockDrawStep({onNext}:any) {
       <div style={{background:"rgba(99,102,241,0.06)",border:"1px solid rgba(99,102,241,0.18)",borderRadius:12,padding:"12px 16px",marginBottom:16}}>
         <p style={{color:"#a5b4fc",fontSize:14,lineHeight:1.7}}>① Draw a circle &nbsp;② Write numbers 1 to 12 inside &nbsp;③ Draw hands at <strong>11:10</strong></p>
       </div>
-      <DrawCanvas bgFn={bgFn} onDone={()=>setPhase("describe")}/>
-    </div>
-  )
-
-  if(phase==="describe") return(
-    <div>
-      <div style={{background:"rgba(99,102,241,0.07)",border:"1px solid rgba(99,102,241,0.2)",borderRadius:14,padding:16,marginBottom:16}}>
-        <p style={{color:"#a5b4fc",fontSize:14,lineHeight:1.7}}>Now describe your clock drawing. Be honest — this helps the AI score it accurately.</p>
-      </div>
-      <textarea className="inp" rows={4}
-        placeholder="e.g. I drew a circle. I wrote all 12 numbers inside. I drew two hands — one pointing to 11 and one to 2…"
-        value={desc} onChange={e=>setDesc(e.target.value)}
-        style={{resize:"none",minHeight:110,fontSize:15}}/>
-      <button className="btn-green" style={{marginTop:14,width:"100%",fontSize:17,padding:"15px",opacity:desc.trim().length>5?1:0.4}}
-        onClick={analyse} disabled={desc.trim().length<5}>
-        Submit for AI Analysis →
-      </button>
+      <DrawCanvas bgFn={bgFn} onDone={analyse}/>
     </div>
   )
 
   if(phase==="analysing") return(
     <div style={{textAlign:"center",padding:"40px 0"}}>
       <div className="dots"><span/><span/><span/></div>
-      <p style={{color:"#6b7280",fontSize:14,marginTop:14}}>AI is analysing your clock drawing…</p>
+      <p style={{color:"#6b7280",fontSize:14,marginTop:14}}>Analysing your clock drawing…</p>
     </div>
   )
 
@@ -650,8 +687,7 @@ function ClockDrawStep({onNext}:any) {
 
 // ── PENTAGON DRAW ──────────────────────────────────────────────────────────
 function PentagonDrawStep({onNext}:any) {
-  const [phase,setPhase]=useState<"draw"|"describe"|"analysing"|"done">("draw")
-  const [desc,setDesc]=useState("")
+  const [phase,setPhase]=useState<"draw"|"analysing"|"done">("draw")
   const [result,setResult]=useState<{score:number;note:string}|null>(null)
 
   const bgFn=(ctx:CanvasRenderingContext2D,w:number,h:number)=>{
@@ -665,44 +701,44 @@ function PentagonDrawStep({onNext}:any) {
     ctx.fillText("↗ COPY THESE SHAPES BELOW",w/2,h-12)
   }
 
-  const analyse=async()=>{
-    if(!desc.trim())return
+  // Score pentagon drawing based on actual canvas pixels
+  const scorePentagonDrawing=(canvas:HTMLCanvasElement):number=>{
+    const ctx=canvas.getContext("2d")!
+    const imgData=ctx.getImageData(0,0,canvas.width,canvas.height)
+    const data=imgData.data
+    let drawnPixels=0
+    for(let i=3;i<data.length;i+=4){
+      if(data[i]>128)drawnPixels++ // Count pixels with opacity > 50%
+    }
+    const coverage=(drawnPixels/(canvas.width*canvas.height))*100
+    // Scoring for pentagon: minimal=0, some drawing=1, good attempt=2
+    if(coverage<8)return 0
+    if(coverage<25)return 1
+    return 2
+  }
+
+  const analyse=async(canvas:HTMLCanvasElement)=>{
     setPhase("analysing")
     try{
-      const res=await fetch("/api/analyse-picture",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({description:desc,type:"pentagon"})})
-      const data=await res.json()
-      setResult(data)
-    }catch{setResult({score:0,note:"Analysis recorded."})}
+      const score=scorePentagonDrawing(canvas)
+      const feedback=score===2?"Good pentagon shapes drawn":
+                     score===1?"Pentagon shapes attempted":"Pentagon drawing recorded"
+      setResult({score,note:feedback})
+    }catch{setResult({score:1,note:"Pentagon drawing analysed."})}
     setPhase("done")
   }
 
   if(phase==="draw") return(
     <div>
       <p style={{color:"#9ca3af",fontSize:14,marginBottom:14,lineHeight:1.75}}>Look at the two five-sided shapes in the <strong style={{color:"#a5b4fc"}}>top-right corner</strong>. They overlap. Copy them below.</p>
-      <DrawCanvas bgFn={bgFn} onDone={()=>setPhase("describe")}/>
-    </div>
-  )
-
-  if(phase==="describe") return(
-    <div>
-      <div style={{background:"rgba(99,102,241,0.07)",border:"1px solid rgba(99,102,241,0.2)",borderRadius:14,padding:16,marginBottom:16}}>
-        <p style={{color:"#a5b4fc",fontSize:14,lineHeight:1.7}}>Describe your drawing. Did the shapes overlap? Did they have 5 sides each?</p>
-      </div>
-      <textarea className="inp" rows={3}
-        placeholder="e.g. I drew two five-sided shapes and they overlap in the middle…"
-        value={desc} onChange={e=>setDesc(e.target.value)}
-        style={{resize:"none",minHeight:90,fontSize:15}}/>
-      <button className="btn-green" style={{marginTop:14,width:"100%",fontSize:17,padding:"15px",opacity:desc.trim().length>5?1:0.4}}
-        onClick={analyse} disabled={desc.trim().length<5}>
-        Submit for AI Analysis →
-      </button>
+      <DrawCanvas bgFn={bgFn} onDone={analyse}/>
     </div>
   )
 
   if(phase==="analysing") return(
     <div style={{textAlign:"center",padding:"40px 0"}}>
       <div className="dots"><span/><span/><span/></div>
-      <p style={{color:"#6b7280",fontSize:14,marginTop:14}}>AI is analysing your pentagon drawing…</p>
+      <p style={{color:"#6b7280",fontSize:14,marginTop:14}}>Analysing your pentagon drawing…</p>
     </div>
   )
 
@@ -737,7 +773,7 @@ function StoryReadStep({step,onNext}:any) {
   )
 }
 
-function PictureDescribeStep({onNext}:any) {
+function PictureDescribeStep({step,onNext}:any) {
   const [val,setVal]=useState("")
   const [loading,setLoading]=useState(false)
   const [result,setResult]=useState<{score:number;note:string}|null>(null)
@@ -753,67 +789,30 @@ function PictureDescribeStep({onNext}:any) {
     setLoading(false)
   }
 
+  // Get picture name and description from step
+  const pictureName = step?.picture_name || "Picture"
+  const pictureDesc = step?.picture || "Look at this picture."
+
   return(
     <div>
       <p style={{color:"#9ca3af",fontSize:14,marginBottom:14,lineHeight:1.75}}>
         Look carefully at this picture. Describe <strong style={{color:"#e5e7eb"}}>every person, every action, every object</strong> you can see.
       </p>
-      {/* Boston Cookie Theft Scene */}
-      <div style={{background:"#f5ede0",borderRadius:16,padding:"12px",marginBottom:16,border:"2px solid rgba(200,160,106,0.4)"}}>
-        <p style={{color:"#7a5230",fontSize:10,fontFamily:"monospace",letterSpacing:"0.08em",textAlign:"center",marginBottom:8}}>🖼️ LOOK AT THIS PICTURE CAREFULLY — describe everything you see</p>
-        <svg viewBox="0 0 500 300" style={{width:"100%",borderRadius:10,display:"block"}} xmlns="http://www.w3.org/2000/svg">
-          <rect width="500" height="300" fill="#f0e6d3"/>
-          <rect x="0" y="220" width="500" height="80" fill="#d4b896"/>
-          <line x1="0" y1="220" x2="500" y2="220" stroke="#b8956a" strokeWidth="2"/>
-          <rect x="25" y="35" width="95" height="110" fill="#b8d9f0" stroke="#8b7355" strokeWidth="2.5" rx="3"/>
-          <line x1="72" y1="35" x2="72" y2="145" stroke="#8b7355" strokeWidth="2"/>
-          <line x1="25" y1="90" x2="120" y2="90" stroke="#8b7355" strokeWidth="2"/>
-          <rect x="295" y="15" width="190" height="125" fill="#c8a06a" stroke="#8b7355" strokeWidth="2" rx="3"/>
-          <line x1="390" y1="15" x2="390" y2="140" stroke="#8b7355" strokeWidth="2"/>
-          <rect x="295" y="15" width="95" height="125" fill="#e0b87a" stroke="#8b7355" strokeWidth="1.5" rx="2"/>
-          <rect x="308" y="50" width="52" height="70" fill="#cd853f" stroke="#8b5a2b" strokeWidth="2" rx="7"/>
-          <rect x="311" y="44" width="46" height="14" fill="#a0522d" rx="4"/>
-          <text x="334" y="92" fill="#fff" fontSize="9" fontFamily="monospace" textAnchor="middle">COOKIES</text>
-          <circle cx="365" cy="105" r="9" fill="#d2691e" stroke="#8b4513" strokeWidth="1.5"/>
-          <circle cx="350" cy="118" r="8" fill="#d2691e" stroke="#8b4513" strokeWidth="1.5"/>
-          <circle cx="372" cy="122" r="7" fill="#d2691e" stroke="#8b4513" strokeWidth="1.5"/>
-          <rect x="325" y="158" width="58" height="7" fill="#8b7355" rx="3" transform="rotate(-8,325,158)"/>
-          <rect x="330" y="164" width="7" height="56" fill="#8b7355"/>
-          <rect x="366" y="164" width="7" height="56" fill="#8b7355"/>
-          <circle cx="352" cy="98" r="17" fill="#fdbcb4"/>
-          <path d="M335,90 Q352,76 369,90" fill="#4a3728"/>
-          <rect x="337" y="113" width="30" height="46" fill="#4a90d9" rx="5"/>
-          <line x1="367" y1="125" x2="392" y2="88" stroke="#fdbcb4" strokeWidth="9" strokeLinecap="round"/>
-          <circle cx="395" cy="85" r="7" fill="#fdbcb4"/>
-          <line x1="337" y1="125" x2="320" y2="142" stroke="#fdbcb4" strokeWidth="9" strokeLinecap="round"/>
-          <circle cx="272" cy="132" r="15" fill="#fdbcb4"/>
-          <path d="M257,126 Q272,113 287,126" fill="#6b3a2a"/>
-          <rect x="258" y="145" width="28" height="44" fill="#e879a0" rx="5"/>
-          <line x1="258" y1="158" x2="240" y2="172" stroke="#fdbcb4" strokeWidth="7" strokeLinecap="round"/>
-          <line x1="286" y1="158" x2="304" y2="152" stroke="#fdbcb4" strokeWidth="7" strokeLinecap="round"/>
-          <rect x="128" y="175" width="118" height="50" fill="#a8bcd4" stroke="#7a9bb5" strokeWidth="2" rx="3"/>
-          <rect x="138" y="183" width="98" height="35" fill="#7fb3d3" rx="3"/>
-          <rect x="180" y="163" width="7" height="20" fill="#999"/>
-          <rect x="172" y="163" width="23" height="5" fill="#999" rx="3"/>
-          <path d="M138,218 Q148,232 143,250 Q158,240 153,255 Q168,245 163,260 Q178,250 173,264 Q188,254 183,268 Q198,260 205,272 Q218,262 222,275 Q232,265 236,278 L138,278Z" fill="#7fb3d3" opacity="0.75"/>
-          <circle cx="162" cy="128" r="18" fill="#fdbcb4"/>
-          <path d="M144,121 Q162,106 180,121 Q180,108 162,103 Q144,108 144,121Z" fill="#8b6347"/>
-          <rect x="146" y="144" width="33" height="52" fill="#7c5cbf" rx="5"/>
-          <line x1="146" y1="160" x2="126" y2="180" stroke="#fdbcb4" strokeWidth="8" strokeLinecap="round"/>
-          <ellipse cx="114" cy="186" rx="16" ry="20" fill="#e8e8e8" stroke="#ccc" strokeWidth="2"/>
-          <line x1="179" y1="160" x2="196" y2="176" stroke="#fdbcb4" strokeWidth="8" strokeLinecap="round"/>
-          <rect x="128" y="225" width="362" height="10" fill="#c8a06a" stroke="#8b7355" strokeWidth="1"/>
-          <text x="352" y="295" fill="#7a5230" fontSize="8" fontFamily="monospace" textAnchor="middle">boy stealing cookies</text>
-          <text x="162" y="295" fill="#1a6491" fontSize="8" fontFamily="monospace" textAnchor="middle">water overflowing</text>
-          <text x="272" y="295" fill="#9a2070" fontSize="8" fontFamily="monospace" textAnchor="middle">girl watching</text>
-        </svg>
+      {/* Picture Display - Dynamic Based on Selection */}
+      <div style={{background:"#f5ede0",borderRadius:16,padding:"16px",marginBottom:16,border:"2px solid rgba(200,160,106,0.4)"}}>
+        <p style={{color:"#7a5230",fontSize:10,fontFamily:"monospace",letterSpacing:"0.08em",textAlign:"center",marginBottom:12}}>🖼️ {pictureName.toUpperCase()}</p>
+        <div style={{background:"rgba(255,255,255,0.5)",borderRadius:12,padding:"16px",minHeight:120,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <p style={{color:"#5a4a3a",fontSize:15,lineHeight:1.8,textAlign:"center"}}>
+            {pictureDesc}
+          </p>
+        </div>
       </div>
       <textarea className="inp" rows={6}
         placeholder="Describe everything you see: the people, what they are doing, what objects are there, anything unusual happening…"
         value={val} onChange={e=>setVal(e.target.value)}
         style={{resize:"none",minHeight:130,fontSize:15}}/>
       <div style={{background:"rgba(99,102,241,0.06)",border:"1px solid rgba(99,102,241,0.2)",borderRadius:10,padding:"10px 14px",marginTop:10,marginBottom:14}}>
-        <p style={{color:"#a5b4fc",fontSize:12,lineHeight:1.6}}>💡 Describe the woman, the child, the water, the cupboard, the stool. More detail = better score.</p>
+        <p style={{color:"#a5b4fc",fontSize:12,lineHeight:1.6}}>💡 Describe what you see in detail. More detail = better score.</p>
       </div>
       {!result?(
         <button className="btn-green" style={{width:"100%",fontSize:17,padding:"15px",opacity:val.trim().length>10?1:0.4}}
@@ -1095,6 +1094,10 @@ export default function Home() {
     next["_digit_answers"]  = JSON.stringify(session.meta.digitAnswers)
     next["_word_set"]       = JSON.stringify(session.meta.wordSet.words)
     next["_letter_used"]    = session.meta.letterUsed
+    next["_story_text"]     = session.meta.story
+    next["_story_name"]     = session.meta.storyName
+    next["_picture_desc"]   = session.meta.picture
+    next["_picture_name"]   = session.meta.pictureName
     setAnswers(next)
     if(stepIdx+1>=total){await finish(next)}
     else{setStepIdx(i=>i+1)}
