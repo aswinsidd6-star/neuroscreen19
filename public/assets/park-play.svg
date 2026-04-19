@@ -1,0 +1,57 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sky -->
+  <rect width="400" height="180" fill="#87ceeb"/>
+  
+  <!-- Grass -->
+  <rect y="180" width="400" height="120" fill="#228b22"/>
+  
+  <!-- Trees -->
+  <rect x="30" y="100" width="25" height="100" fill="#8b4513"/>
+  <circle cx="42" cy="80" r="45" fill="#228b22"/>
+  
+  <rect x="320" y="110" width="25" height="90" fill="#8b4513"/>
+  <circle cx="332" cy="90" r="40" fill="#228b22"/>
+  
+  <!-- Lake/Pond -->
+  <ellipse cx="280" cy="220" rx="60" ry="35" fill="#1e90ff"/>
+  
+  <!-- Ducks on water -->
+  <ellipse cx="260" cy="210" rx="8" ry="6" fill="#ff9900"/>
+  <circle cx="268" cy="208" r="4" fill="#000"/>
+  
+  <ellipse cx="300" cy="225" rx="8" ry="6" fill="#ff9900"/>
+  <circle cx="308" cy="223" r="4" fill="#000"/>
+  
+  <!-- Playground equipment -->
+  <!-- Seesaw -->
+  <ellipse cx="100" cy="165" rx="45" ry="8" fill="#8b4513"/>
+  <circle cx="90" cy="165" r="8" fill="#ff6699"/>
+  <circle cx="110" cy="165" r="8" fill="#ff6699"/>
+  
+  <!-- Merry-go-round (roundabout) -->
+  <circle cx="200" cy="180" r="30" fill="#ff6347" opacity="0.7"/>
+  <circle cx="200" cy="180" r="25" fill="#ff6347" opacity="0.9"/>
+  <circle cx="200" cy="180" r="3" fill="#666"/>
+  
+  <!-- Children on equipment -->
+  <!-- Child 1 on merry-go-round -->
+  <circle cx="220" cy="160" r="7" fill="#ffcc99"/>
+  <rect x="214" y="170" width="12" height="16" fill="#3366cc"/>
+  
+  <!-- Child 2 with ball -->
+  <circle cx="150" cy="210" r="7" fill="#ffcc99"/>
+  <rect x="144" y="220" width="12" height="16" fill="#ff66cc"/>
+  <circle cx="170" cy="205" r="5" fill="#ff0000"/>
+  
+  <!-- Clouds -->
+  <ellipse cx="350" cy="40" rx="25" ry="15" fill="#fff"/>
+  <ellipse cx="370" cy="45" rx="20" ry="12" fill="#fff"/>
+  
+  <!-- Sun -->
+  <circle cx="60" cy="30" r="20" fill="#ffd700"/>
+  
+  <!-- Title -->
+  <text x="200" y="290" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">
+    Park & Playground
+  </text>
+</svg>

@@ -4,7 +4,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'POST') return res.status(405).end()
   const { description, type } = req.body
 
+  console.log('[analyse-picture] Request received:', { type, descriptionLength: description?.length || 0 })
+
   if (!description || description.trim().length < 1) {
+    console.log('[analyse-picture] No description provided, returning score 0')
     return res.json({ score: 0, note: 'No description was provided.' })
   }
 
@@ -214,11 +217,16 @@ Reply ONLY with JSON: {"score":N,"note":"one sentence explaining the score"}`
     const clean = txt.replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(clean)
 
+    console.log('[analyse-picture] AI response received:', { type, rawContent: txt.substring(0, 100), parsed })
+
     let finalScore = parsed.score ?? 0
     const wordCount = description.trim().split(/\s+/).length
 
     // Safety net — real words written = never 0 unless truly blank
-    if (finalScore === 0 && wordCount >= 3) finalScore = 1
+    if (finalScore === 0 && wordCount >= 3) {
+      console.log('[analyse-picture] Boosting score from 0 to 1 (safety net - wordCount:', wordCount, ')')
+      finalScore = 1
+    }
 
     // Extra keyword safety for picture
     if (type === 'picture') {
@@ -229,21 +237,41 @@ Reply ONLY with JSON: {"score":N,"note":"one sentence explaining the score"}`
       const midMatched  = midKeywords.filter((k:string) => desc.includes(k)).length
       const totalMatched = highMatched * 2 + midMatched
 
+      console.log('[analyse-picture] Keyword matching:', { highMatched, midMatched, totalMatched, finalScore })
+
       // Only override if AI severely underscored
-      if (finalScore === 0 && totalMatched >= 1) finalScore = 1
-      if (finalScore <= 1 && totalMatched >= 4) finalScore = 2
-      if (finalScore <= 2 && totalMatched >= 7) finalScore = 3
-      if (finalScore <= 3 && totalMatched >= 11) finalScore = 4
-      if (finalScore <= 4 && totalMatched >= 15) finalScore = 5
+      if (finalScore === 0 && totalMatched >= 1) {
+        finalScore = 1
+        console.log('[analyse-picture] Keyword boost: 0->1')
+      }
+      if (finalScore <= 1 && totalMatched >= 4) {
+        finalScore = 2
+        console.log('[analyse-picture] Keyword boost: score->2')
+      }
+      if (finalScore <= 2 && totalMatched >= 7) {
+        finalScore = 3
+        console.log('[analyse-picture] Keyword boost: score->3')
+      }
+      if (finalScore <= 3 && totalMatched >= 11) {
+        finalScore = 4
+        console.log('[analyse-picture] Keyword boost: score->4')
+      }
+      if (finalScore <= 4 && totalMatched >= 15) {
+        finalScore = 5
+        console.log('[analyse-picture] Keyword boost: score->5')
+      }
     }
 
     const maxScore = type === 'pentagon' ? 2 : 5
-    res.json({
+    const finalResult = {
       score: Math.min(maxScore, Math.max(0, finalScore)),
       note: parsed.note ?? 'Analysis complete.'
-    })
+    }
+    console.log('[analyse-picture] Final response:', finalResult)
+    res.json(finalResult)
 
-  } catch {
+  } catch (error) {
+    console.log('[analyse-picture] API error, using fallback scoring:', error)
     // Full fallback — keyword scoring if AI completely fails
     const desc = (description || '').toLowerCase()
     let score = 0
@@ -265,6 +293,7 @@ Reply ONLY with JSON: {"score":N,"note":"one sentence explaining the score"}`
       const matched = elements.filter(group => group.some((k:string) => desc.includes(k))).length
       score = matched >= 7 ? 5 : matched >= 5 ? 4 : matched >= 3 ? 3 : matched >= 2 ? 2 : matched >= 1 ? 1 : 0
       note = `Identified ${matched} scene elements. ${matched < 5 ? 'Try to describe more details like the water overflowing and the stool tipping.' : 'Good observation of the scene.'}`
+      console.log('[analyse-picture] Fallback scoring (picture):', { matched, score, note })
     } else if (type === 'clock') {
       const hasCircle  = /circle|round|oval|clock/.test(desc)
       const hasNumbers = /number|1|2|3|12|digit/.test(desc)
@@ -274,15 +303,17 @@ Reply ONLY with JSON: {"score":N,"note":"one sentence explaining the score"}`
             : hasCircle && hasNumbers && hasHands ? 3
             : hasCircle && hasNumbers ? 2
             : hasCircle ? 1 : desc.length > 4 ? 1 : 0
-      note = 'Clock drawing evaluated from your description.'
+      console.log('[analyse-picture] Fallback scoring (clock):', { hasCircle, hasNumbers, hasHands, hasError, score })
     } else if (type === 'pentagon') {
       const hasTwo     = /two|both|2|pair/.test(desc)
       const hasOverlap = /overlap|cross|together|intersect|inside/.test(desc)
       const hasFive    = /five|5|pentagon|sided/.test(desc)
       score = hasTwo && hasOverlap && hasFive ? 2 : hasTwo && hasOverlap ? 1 : hasTwo || hasOverlap ? 1 : desc.length > 4 ? 0 : 0
       note = 'Pentagon drawing evaluated from your description.'
+      console.log('[analyse-picture] Fallback scoring (pentagon):', { hasTwo, hasOverlap, hasFive, score })
     }
 
+    console.log('[analyse-picture] Fallback response:', { score, note })
     res.json({ score, note })
   }
 }

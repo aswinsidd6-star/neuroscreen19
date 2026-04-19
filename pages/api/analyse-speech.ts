@@ -4,7 +4,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'POST') return res.status(405).end()
   const { transcript, sentence } = req.body
 
+  console.log('[analyse-speech] Request received:', { transcriptLength: transcript?.length || 0, sentenceLength: sentence?.length || 0 })
+
   if (!transcript || transcript.trim().length < 2) {
+    console.log('[analyse-speech] Transcript too short, returning score 0')
     return res.json({ score: 0, note: 'No speech was captured — unable to evaluate.' })
   }
 
@@ -116,31 +119,56 @@ Reply ONLY with JSON (no markdown):
     const clean = txt.replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(clean)
 
+    console.log('[analyse-speech] AI response received:', { rawContent: txt.substring(0, 100), parsed })
+
     // Word match calculation as safety check
     const targetWords = sentence.toLowerCase().replace(/[.,!?]/g,'').split(' ').filter((w:string) => w.length > 2)
     const transcriptLower = transcript.toLowerCase().replace(/[.,!?]/g,'')
     const matchedWords = targetWords.filter((w:string) => transcriptLower.includes(w))
     const matchPct = matchedWords.length / targetWords.length
 
+    console.log('[analyse-speech] Word matching:', { targetWordCount: targetWords.length, matchedCount: matchedWords.length, matchPct: (matchPct * 100).toFixed(1) + '%' })
+
     let finalScore = parsed.score ?? 0
 
     // Safety boosts — if AI underscoredst but word match is high
-    if (matchPct >= 0.95 && finalScore < 5) finalScore = 5
-    else if (matchPct >= 0.85 && finalScore < 4) finalScore = 4
-    else if (matchPct >= 0.65 && finalScore < 3) finalScore = 3
-    else if (matchPct >= 0.40 && finalScore < 2) finalScore = 2
-    else if (matchPct >= 0.15 && finalScore < 1) finalScore = 1
+    if (matchPct >= 0.95 && finalScore < 5) {
+      finalScore = 5
+      console.log('[analyse-speech] Boost: word match 95% -> score 5')
+    }
+    else if (matchPct >= 0.85 && finalScore < 4) {
+      finalScore = 4
+      console.log('[analyse-speech] Boost: word match 85% -> score 4')
+    }
+    else if (matchPct >= 0.65 && finalScore < 3) {
+      finalScore = 3
+      console.log('[analyse-speech] Boost: word match 65% -> score 3')
+    }
+    else if (matchPct >= 0.40 && finalScore < 2) {
+      finalScore = 2
+      console.log('[analyse-speech] Boost: word match 40% -> score 2')
+    }
+    else if (matchPct >= 0.15 && finalScore < 1) {
+      finalScore = 1
+      console.log('[analyse-speech] Boost: word match 15% -> score 1')
+    }
 
     // Safety floor — if they said real words, minimum 1
     const wordCount = transcript.trim().split(/\s+/).length
-    if (finalScore === 0 && wordCount >= 2) finalScore = 1
+    if (finalScore === 0 && wordCount >= 2) {
+      finalScore = 1
+      console.log('[analyse-speech] Boost: wordCount', wordCount, '-> score 1')
+    }
 
-    res.json({
+    const finalResult = {
       score: Math.min(5, Math.max(0, finalScore)),
       note: parsed.note ?? `Speech matched approximately ${Math.round(matchPct * 100)}% of target words.`
-    })
+    }
+    console.log('[analyse-speech] Final response:', finalResult)
+    res.json(finalResult)
 
-  } catch {
+  } catch (error) {
+    console.log('[analyse-speech] API error, using fallback scoring:', error)
     // Full fallback — pure word matching if AI fails
     const targetWords = sentence.toLowerCase().replace(/[.,!?]/g,'').split(' ').filter((w:string) => w.length > 2)
     const transcriptLower = (transcript || '').toLowerCase().replace(/[.,!?]/g,'')
@@ -159,9 +187,11 @@ Reply ONLY with JSON (no markdown):
                 : bestPct >= 0.30 ? 2
                 : transcript.trim().length > 3 ? 1 : 0
 
-    res.json({
+    const fallbackResult = {
       score,
       note: `Speech evaluated — matched ${Math.round(bestPct * 100)}% of key words from the target sentence.`
-    })
+    }
+    console.log('[analyse-speech] Fallback response:', { matched, pct: (pct * 100).toFixed(1), keyMatched, keyPct: (keyPct * 100).toFixed(1), bestPct: (bestPct * 100).toFixed(1), score })
+    res.json(fallbackResult)
   }
 }

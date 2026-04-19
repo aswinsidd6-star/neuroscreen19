@@ -634,11 +634,25 @@ function ClockDrawStep({onNext}:any) {
       if(data[i]>128)drawnPixels++ // Count pixels with opacity > 50%
     }
     const coverage=(drawnPixels/(canvas.width*canvas.height))*100
+    console.log("[ClockDraw] Canvas coverage:", coverage.toFixed(2) + "%")
     // Scoring: minimal drawing=1, moderate=2, good=3-4, excellent=5
-    if(coverage<5)return 1
-    if(coverage<10)return 2
-    if(coverage<20)return 3
-    if(coverage<35)return 4
+    if(coverage<5){
+      console.log("[ClockDraw] Score: 1 (minimal drawing)")
+      return 1
+    }
+    if(coverage<10){
+      console.log("[ClockDraw] Score: 2 (minimal drawing)")
+      return 2
+    }
+    if(coverage<20){
+      console.log("[ClockDraw] Score: 3 (moderate drawing)")
+      return 3
+    }
+    if(coverage<35){
+      console.log("[ClockDraw] Score: 4 (good drawing)")
+      return 4
+    }
+    console.log("[ClockDraw] Score: 5 (excellent drawing)")
     return 5
   }
 
@@ -647,9 +661,15 @@ function ClockDrawStep({onNext}:any) {
     try{
       const score=scoreClockDrawing(canvas)
       const feedback=score===5?"Excellent clock drawing with clear circle and hands":
-                     score===4?"Good clock with most elements":"Clear clock drawing"
+                     score===4?"Good clock with most elements present":
+                     score===3?"Clock drawing with visible elements":
+                     score===2?"Minimal clock outline attempted":
+                     "Very minimal drawing - unable to evaluate"
       setResult({score,note:feedback})
-    }catch{setResult({score:2,note:"Clock drawing analysed."})}
+    }catch(e){
+      console.error("[ClockDraw] Analysis error:", e)
+      setResult({score:2,note:"Clock drawing recorded."})
+    }
     setPhase("done")
   }
 
@@ -665,7 +685,7 @@ function ClockDrawStep({onNext}:any) {
   if(phase==="analysing") return(
     <div style={{textAlign:"center",padding:"40px 0"}}>
       <div className="dots"><span/><span/><span/></div>
-      <p style={{color:"#6b7280",fontSize:14,marginTop:14}}>Analysing your clock drawing…</p>
+      <p style={{color:"#6b7280",fontSize:14,marginTop:14}}>Analyzing your clock drawing…</p>
     </div>
   )
 
@@ -711,9 +731,17 @@ function PentagonDrawStep({onNext}:any) {
       if(data[i]>128)drawnPixels++ // Count pixels with opacity > 50%
     }
     const coverage=(drawnPixels/(canvas.width*canvas.height))*100
+    console.log("[PentagonDraw] Canvas coverage:", coverage.toFixed(2) + "%")
     // Scoring for pentagon: minimal=0, some drawing=1, good attempt=2
-    if(coverage<8)return 0
-    if(coverage<25)return 1
+    if(coverage<8){
+      console.log("[PentagonDraw] Score: 0 (no drawing)")
+      return 0
+    }
+    if(coverage<25){
+      console.log("[PentagonDraw] Score: 1 (minimal drawing)")
+      return 1
+    }
+    console.log("[PentagonDraw] Score: 2 (good drawing)")
     return 2
   }
 
@@ -724,7 +752,10 @@ function PentagonDrawStep({onNext}:any) {
       const feedback=score===2?"Good pentagon shapes drawn":
                      score===1?"Pentagon shapes attempted":"Pentagon drawing recorded"
       setResult({score,note:feedback})
-    }catch{setResult({score:1,note:"Pentagon drawing analysed."})}
+    }catch(e){
+      console.error("[PentagonDraw] Analysis error:", e)
+      setResult({score:1,note:"Pentagon drawing recorded."})
+    }
     setPhase("done")
   }
 
@@ -738,7 +769,7 @@ function PentagonDrawStep({onNext}:any) {
   if(phase==="analysing") return(
     <div style={{textAlign:"center",padding:"40px 0"}}>
       <div className="dots"><span/><span/><span/></div>
-      <p style={{color:"#6b7280",fontSize:14,marginTop:14}}>Analysing your pentagon drawing…</p>
+      <p style={{color:"#6b7280",fontSize:14,marginTop:14}}>Analyzing your pentagon drawing…</p>
     </div>
   )
 
@@ -777,21 +808,40 @@ function PictureDescribeStep({step,onNext}:any) {
   const [val,setVal]=useState("")
   const [loading,setLoading]=useState(false)
   const [result,setResult]=useState<{score:number;note:string}|null>(null)
+  const [imageError,setImageError]=useState(false)
 
   const analyse=async()=>{
     if(val.trim().length<10)return
     setLoading(true)
+    console.log("[PictureDescribe] Analyzing description:", val.substring(0,50))
     try{
       const res=await fetch("/api/analyse-picture",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({description:val,type:"picture"})})
       const data=await res.json()
+      console.log("[PictureDescribe] API Response:", data)
       setResult(data)
-    }catch{setResult({score:0,note:"Description recorded."})}
+    }catch(e){
+      console.error("[PictureDescribe] Error:", e)
+      setResult({score:2,note:"Description recorded. Unable to analyze at this moment."})
+    }
     setLoading(false)
   }
 
   // Get picture name and description from step
   const pictureName = step?.picture_name || "Picture"
   const pictureDesc = step?.picture || "Look at this picture."
+  
+  // Map picture names to image file names
+  const imageMap: Record<string, string> = {
+    "Kitchen - Cookie Theft": "/assets/cookie-theft.svg",
+    "Garden Play": "/assets/garden-play.svg",
+    "Beach Day": "/assets/beach-day.svg",
+    "Classroom Learning": "/assets/classroom.svg",
+    "Birthday Celebration": "/assets/birthday.svg",
+    "Weather & Park Play": "/assets/park-play.svg",
+    "Market Shopping": "/assets/market.svg",
+    "Doctor's Office Waiting": "/assets/doctors-office.svg"
+  }
+  const imagePath = imageMap[pictureName]
 
   return(
     <div>
@@ -801,10 +851,23 @@ function PictureDescribeStep({step,onNext}:any) {
       {/* Picture Display - Dynamic Based on Selection */}
       <div style={{background:"#f5ede0",borderRadius:16,padding:"16px",marginBottom:16,border:"2px solid rgba(200,160,106,0.4)"}}>
         <p style={{color:"#7a5230",fontSize:10,fontFamily:"monospace",letterSpacing:"0.08em",textAlign:"center",marginBottom:12}}>🖼️ {pictureName.toUpperCase()}</p>
-        <div style={{background:"rgba(255,255,255,0.5)",borderRadius:12,padding:"16px",minHeight:120,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <p style={{color:"#5a4a3a",fontSize:15,lineHeight:1.8,textAlign:"center"}}>
-            {pictureDesc}
-          </p>
+        <div style={{background:"rgba(255,255,255,0.5)",borderRadius:12,padding:"16px",minHeight:240,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          {imagePath && !imageError ? (
+            <img 
+              src={imagePath} 
+              alt={pictureName}
+              onError={() => {
+                console.warn(`[PictureDescribe] Image failed to load: ${imagePath}`)
+                setImageError(true)
+              }}
+              style={{maxWidth:"100%",maxHeight:240,borderRadius:8,objectFit:"contain"}}
+            />
+          ) : (
+            <p style={{color:"#5a4a3a",fontSize:15,lineHeight:1.8,textAlign:"center"}}>
+              {imageError ? "(Image could not be loaded)" : ""}
+              <br/>{pictureDesc}
+            </p>
+          )}
         </div>
       </div>
       <textarea className="inp" rows={6}
@@ -893,11 +956,16 @@ function SpeechRecordStep({step,onNext}:any) {
 
   const analyse=async(text:string)=>{
     setPhase("analysing")
+    console.log("[SpeechRecord] Analyzing transcript:", text.substring(0,50))
     try{
       const res=await fetch("/api/analyse-speech",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({transcript:text,sentence:step.sentence})})
       const data=await res.json()
+      console.log("[SpeechRecord] API Response:", data)
       setScore(data.score);setFeedback(data.note)
-    }catch{setScore(0);setFeedback("Speech recorded.")}
+    }catch(e){
+      console.error("[SpeechRecord] Error:", e)
+      setScore(2);setFeedback("Speech recorded. Unable to analyze at this moment.")
+    }
     setPhase("complete")
   }
 
@@ -1064,6 +1132,7 @@ export default function Home() {
   const [stepIdx,setStepIdx]=useState(-1)
   const [answers,setAnswers]=useState<Record<string,string>>({})
   const [results,setResults]=useState<ReturnType<typeof computeScore>|null>(null)
+  const [comprehensiveResults,setComprehensiveResults]=useState<any>(null)
   const [aiText,setAiText]=useState("")
   const [aiLoading,setAiLoading]=useState(false)
   const [saving,setSaving]=useState(false)
@@ -1108,9 +1177,21 @@ export default function Home() {
     setResults(res);setStepIdx(total)
     setAiLoading(true);setSaving(true)
     try{
+      // Call existing AI summary API
       const r=await fetch("/api/ai-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({answers:ans,results:res})})
       const data=await r.json()
       setAiText(data.summary||"")
+      
+      // Call new comprehensive assessment API
+      try{
+        const cRes=await fetch("/api/comprehensive-assessment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({answers:ans,patientName:ans.name,patientAge:parseInt(ans.age||"0"),patientEducation:12})})
+        const cData=await cRes.json()
+        if(cData.success){
+          setComprehensiveResults(cData)
+        }
+      }catch(e){console.warn("Comprehensive assessment failed:",e)}
+      
+      // Save to Supabase
       await supabase.from("screenings").insert({
         patient_name:ans.name,patient_age:parseInt(ans.age||"0"),patient_gender:ans.gender,
         mmse_score:res.mmse,risk_level:res.level,risk_score:res.total,
@@ -1380,6 +1461,118 @@ export default function Home() {
                   <div style={{fontSize:15,lineHeight:1.95,color:"rgba(229,231,235,0.9)",whiteSpace:"pre-wrap"}}>{aiText}</div>
                 )}
               </div>
+
+              {/* COMPREHENSIVE ASSESSMENT ANALYSIS */}
+              {comprehensiveResults&&(
+                <>
+                  {/* Domain Scores */}
+                  {comprehensiveResults.domainScores&&(
+                    <div style={{background:"rgba(167,139,250,0.04)",border:"1px solid rgba(167,139,250,0.18)",borderRadius:18,padding:"22px",marginBottom:16}}>
+                      <div style={{fontFamily:"monospace",fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:"#c4b5fd",marginBottom:14}}>📊 COGNITIVE DOMAIN ANALYSIS</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                        {[
+                          ["Orientation","#6ee7b7",comprehensiveResults.domainScores.orientation,6],
+                          ["Registration","#fcd34d",comprehensiveResults.domainScores.registration,3],
+                          ["Attention","#f9a8d4",comprehensiveResults.domainScores.attention,5],
+                          ["Recall","#93c5fd",comprehensiveResults.domainScores.recall,4],
+                          ["Language","#fca5a5",comprehensiveResults.domainScores.language,8],
+                          ["Visuospatial","#6ee7b7",comprehensiveResults.domainScores.visuospatial,5],
+                          ["Executive","#fcd34d",comprehensiveResults.domainScores.executive,4],
+                          ["Speech","#a78bfa",comprehensiveResults.domainScores.speech,3],
+                        ].map(([name,color,score,max])=>(
+                          <div key={String(name)} style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${color}33`,borderRadius:10,padding:"12px",borderLeft:`3px solid ${color}`}}>
+                            <p style={{color:"#e5e7eb",fontSize:12,fontWeight:600,marginBottom:6}}>{name}</p>
+                            <div style={{display:"flex",alignItems:"center",gap:8}}>
+                              <span style={{fontSize:20,fontWeight:700,color:color,fontFamily:"monospace"}}>{score}/{max}</span>
+                              <div style={{flex:1,height:4,background:"rgba(255,255,255,0.1)",borderRadius:2}}>
+                                <div style={{height:"100%",width:`${(score/max)*100}%`,background:color,borderRadius:2}}/>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Risk Assessment */}
+                  {comprehensiveResults.riskAssessment&&(
+                    <div style={{background:"rgba(249,115,22,0.04)",border:"1px solid rgba(249,115,22,0.18)",borderRadius:18,padding:"22px",marginBottom:16}}>
+                      <div style={{fontFamily:"monospace",fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:"#fed7aa",marginBottom:14}}>⚠️ RISK ASSESSMENT</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+                        <div>
+                          <p style={{color:"#9ca3af",fontSize:11,marginBottom:8}}>Overall Risk Score</p>
+                          <div style={{fontSize:32,fontWeight:700,color:"#fbbf24",fontFamily:"monospace",marginBottom:4}}>{comprehensiveResults.riskAssessment.overallRisk}/100</div>
+                          <p style={{fontSize:12,color:"#fcd34d"}}>{comprehensiveResults.riskAssessment.category.replace(/_/g," ")}</p>
+                        </div>
+                        <div>
+                          <p style={{color:"#9ca3af",fontSize:11,marginBottom:8}}>Follow-up Timeframe</p>
+                          <p style={{fontSize:13,color:"#f9a8d4",fontWeight:600}}>{comprehensiveResults.riskAssessment.followUpTimeframe}</p>
+                          <p style={{fontSize:11,color:"#6b7280",marginTop:6}}>Recommended evaluation window</p>
+                        </div>
+                      </div>
+                      {comprehensiveResults.riskAssessment.recommendations&&(
+                        <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid rgba(249,115,22,0.12)"}}>
+                          <p style={{color:"#fed7aa",fontSize:11,fontWeight:600,marginBottom:8}}>Clinical Recommendations:</p>
+                          <ul style={{margin:0,paddingLeft:20,color:"#f9a8d4",fontSize:12,lineHeight:1.8}}>
+                            {comprehensiveResults.riskAssessment.recommendations.slice(0,3).map((rec:string,i:number)=>(
+                              <li key={i}>{rec}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Pattern Analysis */}
+                  {comprehensiveResults.patterns&&(
+                    <div style={{background:"rgba(139,92,246,0.04)",border:"1px solid rgba(139,92,246,0.18)",borderRadius:18,padding:"22px",marginBottom:16}}>
+                      <div style={{fontFamily:"monospace",fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:"#d8b4fe",marginBottom:14}}>🔍 PATTERN ANALYSIS</div>
+                      <p style={{color:"#9ca3af",fontSize:12,marginBottom:10}}>Detected cognitive patterns (Alzheimer-specific indicators):</p>
+                      {comprehensiveResults.patterns.patterns&&comprehensiveResults.patterns.patterns.slice(0,4).map((pattern:any,i:number)=>{
+                        const riskColor=pattern.risk==="high"?"#fca5a5":pattern.risk==="moderate"?"#fcd34d":"#6ee7b7"
+                        return(
+                          <div key={i} style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${riskColor}33`,borderRadius:10,padding:"12px",marginBottom:10,borderLeft:`3px solid ${riskColor}`}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                              <p style={{color:"#e5e7eb",fontSize:12,fontWeight:600}}>{pattern.name}</p>
+                              <span style={{fontSize:10,fontWeight:700,color:riskColor,background:`${riskColor}22`,padding:"3px 10px",borderRadius:12,textTransform:"uppercase"}}>
+                                {pattern.risk}
+                              </span>
+                            </div>
+                            {pattern.indicators&&pattern.indicators[0]&&(
+                              <p style={{color:"#9ca3af",fontSize:11,lineHeight:1.5}}>{pattern.indicators[0]}</p>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Age Normalization */}
+                  {comprehensiveResults.normalization&&(
+                    <div style={{background:"rgba(52,211,153,0.04)",border:"1px solid rgba(52,211,153,0.18)",borderRadius:18,padding:"22px",marginBottom:16}}>
+                      <div style={{fontFamily:"monospace",fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:"#6ee7b7",marginBottom:14}}>📈 AGE-BASED INTERPRETATION</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+                        <div>
+                          <p style={{color:"#9ca3af",fontSize:11,marginBottom:8}}>Normalized Score</p>
+                          <div style={{fontSize:24,fontWeight:700,color:"#34d399",fontFamily:"monospace"}}>{comprehensiveResults.normalization.normScore}/30</div>
+                          <p style={{fontSize:11,color:"#6b7280",marginTop:4}}>Age-adjusted ({comprehensiveResults.normalization.ageGroup} years)</p>
+                        </div>
+                        <div>
+                          <p style={{color:"#9ca3af",fontSize:11,marginBottom:8}}>Percentile Rank</p>
+                          <div style={{fontSize:24,fontWeight:700,color:"#34d399",fontFamily:"monospace"}}>{Math.round(comprehensiveResults.normalization.percentileFinal)}%</div>
+                          <p style={{fontSize:11,color:"#6b7280",marginTop:4}}>Compared to age cohort</p>
+                        </div>
+                      </div>
+                      <div style={{marginTop:14,paddingTop:14,borderTop:"1px solid rgba(52,211,153,0.12)"}}>
+                        <p style={{fontSize:12,color:"#6ee7b7",lineHeight:1.8}}>
+                          {comprehensiveResults.normalization.deviation>=0?"Performing above":"Performing below"} expected level for age ({Math.abs(comprehensiveResults.normalization.deviation).toFixed(1)} point difference).
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
 
               <div style={{background:"rgba(245,158,11,0.05)",border:"1px solid rgba(245,158,11,0.18)",borderRadius:12,padding:"13px 16px",fontSize:13,color:"rgba(245,158,11,0.85)",lineHeight:1.75,marginBottom:22}}>
                 ⚠️ Screening tool only — not a medical diagnosis. Show this report to a qualified doctor.

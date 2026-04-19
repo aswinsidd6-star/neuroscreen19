@@ -1,0 +1,49 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sky -->
+  <rect width="400" height="180" fill="#87ceeb"/>
+  
+  <!-- Grass -->
+  <rect y="180" width="400" height="120" fill="#90ee90"/>
+  
+  <!-- Sun -->
+  <circle cx="350" cy="40" r="30" fill="#ffd700"/>
+  
+  <!-- Clouds -->
+  <ellipse cx="100" cy="50" rx="25" ry="15" fill="#fff"/>
+  <ellipse cx="120" cy="55" rx="20" ry="12" fill="#fff"/>
+  
+  <!-- Tree -->
+  <rect x="280" y="140" width="20" height="60" fill="#8b4513"/>
+  <circle cx="290" cy="120" r="40" fill="#228b22"/>
+  
+  <!-- Swing set -->
+  <line x1="80" y1="100" x2="80" y2="180" stroke="#444" stroke-width="4"/>
+  <line x1="60" y1="100" x2="100" y2="100" stroke="#444" stroke-width="3"/>
+  <circle cx="65" cy="165" r="8" fill="#ff6699"/>
+  <circle cx="95" cy="165" r="8" fill="#ff6699"/>
+  
+  <!-- Child on swing -->
+  <circle cx="65" cy="140" r="8" fill="#ffcc99"/>
+  <rect x="60" y="150" width="10" height="12" fill="#3366cc"/>
+  
+  <!-- Slide -->
+  <rect x="200" y="110" width="15" height="80" fill="#666"/>
+  <path d="M 215 110 Q 250 140 250 190" stroke="#ff6600" stroke-width="20" fill="none"/>
+  
+  <!-- Child sliding -->
+  <circle cx="235" cy="155" r="7" fill="#ffcc99"/>
+  
+  <!-- Flowers -->
+  <circle cx="140" cy="260" r="3" fill="#ff1493"/>
+  <circle cx="145" cy="265" r="3" fill="#ff1493"/>
+  <circle cx="150" cy="260" r="3" fill="#ff1493"/>
+  
+  <!-- Butterfly -->
+  <ellipse cx="320" cy="200" rx="8" ry="10" fill="#ff69b4"/>
+  <ellipse cx="320" cy="200" rx="8" ry="10" fill="#ff69b4" transform="translate(12,0)"/>
+  
+  <!-- Title -->
+  <text x="200" y="290" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">
+    Garden & Play Area
+  </text>
+</svg>
