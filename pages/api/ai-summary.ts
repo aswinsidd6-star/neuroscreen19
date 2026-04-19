@@ -1,12 +1,35 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { evaluateAllTests } from '@/lib/evaluation'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).end()
+type SummaryResponse = {
+  success: boolean
+  evaluation?: any
+  narrative?: string
+  error?: string
+}
 
-  const { answers, results } = req.body
-
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<SummaryResponse>
+) {
   try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ success: false, error: 'Method not allowed' })
+    }
+
+    const { answers } = req.body
+
+    // Validate input
+    if (!answers || typeof answers !== 'object') {
+      return res.status(400).json({ success: false, error: 'Answers object is required' })
+    }
+
+    if (!answers.name || typeof answers.name !== 'string' || answers.name.trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Patient name is required' })
+    }
+
+    console.log('[ai-summary] Request received:', { patientName: answers.name })
+
     // Run comprehensive cognitive evaluation
     const cognitiveProfile = evaluateAllTests(answers)
 
@@ -49,22 +72,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }),
         })
 
-        const data = await response.json()
-        narrativeReport = data.content?.map((c: any) => c.text || '').join('') || ''
+        if (!response.ok) {
+          console.error('[ai-summary] AI API error:', response.status)
+          narrativeReport = ''
+        } else {
+          const data = await response.json()
+          narrativeReport = data.content?.map((c: any) => c.text || '').join('') || ''
+        }
       } catch (aiError) {
-        console.error('AI report generation failed:', aiError)
-        narrativeReport = 'AI report generation unavailable.'
+        console.error('[ai-summary] AI report generation failed:', aiError)
+        narrativeReport = ''
       }
     }
 
-    res.json({
+    return res.status(200).json({
       success: true,
       evaluation: reportSections,
       narrative: narrativeReport || 'Review structured report above.',
     })
   } catch (error) {
-    console.error('Evaluation error:', error)
-    res.status(500).json({
+    console.error('[ai-summary] Unexpected error:', error)
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate cognitive evaluation',
     })

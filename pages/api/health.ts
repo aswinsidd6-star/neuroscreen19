@@ -43,8 +43,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse<Hea
 
     // Check various systems
     const checks = {
-      supabase: !!Config.get('NEXT_PUBLIC_SUPABASE_URL'),
-      ai: !!Config.getBoolean('ENABLE_AI_REPORTS', true),
+      supabase: !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY),
+      ai: !!(process.env.ANTHROPIC_API_KEY || process.env.GROQ_API_KEY),
       logging: true, // Logging is always available
     }
 
@@ -59,7 +59,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ApiResponse<Hea
       status,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      environment: Config.get('NODE_ENV', 'unknown'),
+      environment: process.env.NODE_ENV || 'unknown',
       version: process.env.npm_package_version || '1.0.0',
       checks,
     }

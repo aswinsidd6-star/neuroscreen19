@@ -34,28 +34,55 @@ export default function Dashboard() {
   const [selected, setSelected] = useState<Screening | null>(null)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'ALL' | 'LOW' | 'MODERATE' | 'HIGH'>('ALL')
+  const [authLoading, setAuthLoading] = useState(true)
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !sessionStorage.getItem('doctor_auth')) {
-      router.push('/doctor')
-      return
+    // Check authentication before rendering dashboard
+    if (typeof window !== 'undefined') {
+      const isAuthenticated = sessionStorage.getItem('doctor_auth')
+      if (!isAuthenticated) {
+        router.push('/doctor')
+        return
+      }
+      setAuthLoading(false)
+      loadScreenings()
     }
-    loadScreenings()
-  }, [])
+  }, [router])
 
   const loadScreenings = async () => {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('screenings')
-      .select('*')
-      .order('completed_at', { ascending: false })
-    if (!error && data) setScreenings(data as Screening[])
-    setLoading(false)
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('screenings')
+        .select('*')
+        .order('completed_at', { ascending: false })
+      if (error) {
+        console.error('Error loading screenings:', error)
+        return
+      }
+      if (data) setScreenings(data as Screening[])
+    } catch (err) {
+      console.error('Unexpected error loading screenings:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const logout = () => {
     sessionStorage.removeItem('doctor_auth')
     router.push('/doctor')
+  }
+
+  // Don't render dashboard content until auth is verified
+  if (authLoading) {
+    return (
+      <>
+        <Head><title>Doctor Dashboard — NeuroScreen</title></Head>
+        <div style={{ minHeight: '100vh', background: '#0d1117', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="dots"><span /><span /><span /></div>
+        </div>
+      </>
+    )
   }
 
   const filtered = screenings.filter(s => {

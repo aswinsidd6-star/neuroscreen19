@@ -49,8 +49,16 @@ export class Config {
 
     Logger.info('Config: Initializing configuration')
 
-    // Load from environment
-    this.config = { ...process.env }
+    // Load from environment - filter out undefined values
+    this.config = Object.entries(process.env).reduce(
+      (acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value
+        }
+        return acc
+      },
+      {} as Record<string, string>
+    )
 
     // Validate required fields
     const required: (keyof ConfigSchema)[] = [

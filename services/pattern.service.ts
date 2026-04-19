@@ -29,8 +29,8 @@ export class PatternService {
       const pattern: AlzheimersPattern = {
         riskLevel: this.calculateRiskLevel(totalScore, domainScores),
         score: totalScore,
-        patterns: libraryResult.patterns || [],
-        reasoning: libraryResult.reasoning || this.generateReasonng(domainScores, totalScore),
+        patterns: (libraryResult.patterns || []).map((p) => p.name),
+        reasoning: libraryResult.keyFindings?.join('; ') || this.generateReasonng(domainScores, totalScore),
       }
 
       Logger.info('PatternService: Pattern analysis complete', {

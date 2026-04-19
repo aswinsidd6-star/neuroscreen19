@@ -29,7 +29,7 @@ export class CacheService {
   private static instance: CacheService
   private cache: Map<CacheKey, CacheEntry<any>> = new Map()
   private config: Required<CacheConfig>
-  private cleanupTimer?: NodeJS.Timer
+  private cleanupTimer?: NodeJS.Timeout
 
   private constructor(config: CacheConfig = {}) {
     this.config = {

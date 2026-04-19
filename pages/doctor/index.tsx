@@ -10,13 +10,22 @@ export default function DoctorLogin() {
 
   const login = async () => {
     setLoading(true); setError('')
-    const res = await fetch('/api/doctor-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) })
-    const data = await res.json()
-    if (data.success) {
-      sessionStorage.setItem('doctor_auth', '1')
-      router.push('/doctor/dashboard')
-    } else {
-      setError('Incorrect password. Please try again.')
+    try {
+      const res = await fetch('/api/doctor-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw })
+      })
+      const data = await res.json()
+      if (data.success) {
+        sessionStorage.setItem('doctor_auth', '1')
+        router.push('/doctor/dashboard')
+      } else {
+        setError(data.error || 'Incorrect password. Please try again.')
+      }
+    } catch (err) {
+      setError('Connection error. Please try again.')
+      console.error('Login error:', err)
     }
     setLoading(false)
   }
@@ -41,8 +50,7 @@ export default function DoctorLogin() {
             </button>
           </div>
           <p className="text-center text-gray-600 text-xs mt-4">
-            Default password: <span className="text-gray-400 font-mono">doctor123</span><br />
-            <span className="text-gray-600">(Change this in your Vercel environment variables)</span>
+            <span className="text-gray-600">(Contact administrator for password)</span>
           </p>
         </div>
       </div>

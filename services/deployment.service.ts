@@ -63,7 +63,7 @@ export class DeploymentChecker {
    * Check environment variables
    */
   private static checkEnvironment(): DeploymentCheckResult {
-    const checks = []
+    const checks: DeploymentCheckResult['checks'] = []
     const requiredVars = [
       'NODE_ENV',
       'NEXT_PUBLIC_SUPABASE_URL',
@@ -100,7 +100,7 @@ export class DeploymentChecker {
    * Check dependencies are installed
    */
   private static async checkDependencies(): Promise<DeploymentCheckResult> {
-    const checks = []
+    const checks: DeploymentCheckResult['checks'] = []
     const requiredPackages = [
       'next',
       'react',
@@ -142,7 +142,7 @@ export class DeploymentChecker {
    * Check configuration
    */
   private static checkConfiguration(): DeploymentCheckResult {
-    const checks = []
+    const checks: DeploymentCheckResult['checks'] = []
 
     // Check tsconfig.json
     try {
@@ -202,7 +202,7 @@ export class DeploymentChecker {
    * Check database connectivity
    */
   private static async checkDatabase(): Promise<DeploymentCheckResult> {
-    const checks = []
+    const checks: DeploymentCheckResult['checks'] = []
 
     try {
       // In production, verify Supabase connection
@@ -251,7 +251,7 @@ export class DeploymentChecker {
    * Check security configurations
    */
   private static checkSecurity(): DeploymentCheckResult {
-    const checks = []
+    const checks: DeploymentCheckResult['checks'] = []
 
     // Check HTTPS is enforced
     const enforceHttps = process.env.NEXT_PUBLIC_ENFORCE_HTTPS !== 'false'
@@ -310,7 +310,7 @@ export class DeploymentChecker {
    * Check build output
    */
   private static async checkBuild(): Promise<DeploymentCheckResult> {
-    const checks = []
+    const checks: DeploymentCheckResult['checks'] = []
     const fs = require('fs')
 
     // Check .next directory exists
@@ -345,7 +345,7 @@ export class DeploymentChecker {
    * Check static assets
    */
   private static checkStaticAssets(): DeploymentCheckResult {
-    const checks = []
+    const checks: DeploymentCheckResult['checks'] = []
 
     checks.push({
       name: 'CSS assets (Tailwind)',
@@ -392,7 +392,7 @@ Generated: ${new Date().toISOString()}
       for (const check of section.checks) {
         totalChecks++
         if (check.passed) passedChecks++
-        if (!check.passed && check.severity === 'critical') criticalt++
+        if (!check.passed && check.severity === 'critical') criticalFailures++
 
         const status = check.passed ? '✓' : '✗'
         const symbol =
